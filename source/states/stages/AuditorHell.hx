@@ -10,10 +10,6 @@ class AuditorHell extends BaseStage
 
 	override function create()
 	{
-			//trace("line 538");
-			defaultCamZoom = 0.55;
-			curStage = 'auditorHell';
-
 			tstatic.antialiasing = true;
 			tstatic.scrollFactor.set(0,0);
 			tstatic.setGraphicSize(Std.int(tstatic.width * 8.3));
@@ -31,15 +27,21 @@ class AuditorHell extends BaseStage
 
 			hole.antialiasing = true;
 			hole.scrollFactor.set(0.9, 0.9);
-					
+
+	        	var converHole:FlxSprite = new FlxSprite(7,578).loadGraphic(Paths.image('fourth/Spawnhole_Ground_COVER','clown'));
 			converHole.antialiasing = true;
 			converHole.scrollFactor.set(0.9, 0.9);
 			converHole.setGraphicSize(Std.int(converHole.width * 1.3));
+		        var hole:FlxSprite = new FlxSprite(50,530).loadGraphic(Paths.image('fourth/Spawnhole_Ground_BACK','clown'));
 			hole.setGraphicSize(Std.int(hole.width * 1.55));
+			add(hole);
+			add(converHole);
 
+	        	var cover:FlxSprite = new FlxSprite(-180,755).loadGraphic(Paths.image('fourth/cover','clown'));
 			cover.antialiasing = true;
 			cover.scrollFactor.set(0.9, 0.9);
 			cover.setGraphicSize(Std.int(cover.width * 1.55));
+			add(cover);
 
 			var energyWall:FlxSprite = new FlxSprite(1350,-690).loadGraphic(Paths.image("fourth/Energywall","clown"));
 			energyWall.antialiasing = true;
@@ -51,6 +53,8 @@ class AuditorHell extends BaseStage
 			stageFront.scrollFactor.set(0.9, 0.9);
 			stageFront.setGraphicSize(Std.int(stageFront.width * 1.55));
 			add(stageFront);
+
+			add(dad.exSpikes);
 	}
 	
 	override function createPost()
@@ -303,6 +307,20 @@ class AuditorHell extends BaseStage
 		switch(side)
 		{
 			case 0:
+			// Clown init
+			cloneOne = new FlxSprite(0,0);
+			cloneTwo = new FlxSprite(0,0);
+			cloneOne.frames = CachedFrames.cachedInstance.fromSparrow('cln','fourth/Clone');
+			cloneTwo.frames = CachedFrames.cachedInstance.fromSparrow('cln','fourth/Clone');
+			cloneOne.alpha = 0;
+			cloneTwo.alpha = 0;
+			cloneOne.animation.addByPrefix('clone','Clone',24,false);
+			cloneTwo.animation.addByPrefix('clone','Clone',24,false);
+
+			// cover crap
+
+			add(cloneOne);
+			add(cloneTwo);
 				if (cloneOne.alpha == 1)
 					return;
 				cloneOne.x = dad.x - 20;
