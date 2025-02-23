@@ -8,6 +8,8 @@ class Nevada extends BaseStage
 
 	var tStaticSound:FlxSound = new FlxSound().loadEmbedded(Paths.sound("staticSound","preload"));
 
+	var camFollow:FlxObject;
+
 	override function create()
 	{
 			tstatic.antialiasing = true;
@@ -45,6 +47,185 @@ class Nevada extends BaseStage
 			MAINLIGHT.updateHitbox();
 			MAINLIGHT.antialiasing = true;
 			MAINLIGHT.scrollFactor.set(1.2, 1.2);
+	}
+	function trickySecondCutscene():Void // why is this a second method? idk cry about it loL!!!!
+	{
+			var done:Bool = false;
+
+			trace('starting cutscene');
+
+			var black:FlxSprite = new FlxSprite(-300, -120).makeGraphic(FlxG.width * 2, FlxG.height * 2, FlxColor.WHITE);
+			black.scrollFactor.set();
+			black.alpha = 0;
+			
+			var animation:FlxSprite = new FlxSprite(200,300); // create the fuckin thing
+
+			animation.frames = Paths.getSparrowAtlas('trickman','clown'); // add animation from sparrow
+			animation.antialiasing = true;
+			animation.animation.addByPrefix('cut1','Cutscene 1', 24, false);
+			animation.animation.addByPrefix('cut2','Cutscene 2', 24, false);
+			animation.animation.addByPrefix('cut3','Cutscene 3', 24, false);
+			animation.animation.addByPrefix('cut4','Cutscene 4', 24, false);
+			animation.animation.addByPrefix('pillar','Pillar Beam Tricky', 24, false);
+			
+			animation.setGraphicSize(Std.int(animation.width * 1.5));
+
+			animation.alpha = 0;
+
+			camFollow.setPosition(dad.getMidpoint().x + 300, boyfriend.getMidpoint().y - 200);
+
+			inCutscene = true;
+			startedCountdown = false;
+			generatedMusic = false;
+			canPause = false;
+
+			FlxG.sound.music.volume = 0;
+			vocals.volume = 0;
+
+			var sounders:FlxSound = new FlxSound().loadEmbedded(Paths.sound('honkers','clown'));
+			var energy:FlxSound = new FlxSound().loadEmbedded(Paths.sound('energy shot','clown'));
+			var roar:FlxSound = new FlxSound().loadEmbedded(Paths.sound('sound_clown_roar','clown'));
+			var pillar:FlxSound = new FlxSound().loadEmbedded(Paths.sound('firepillar','clown'));
+
+			var fade:FlxSprite = new FlxSprite(-300, -120).makeGraphic(FlxG.width * 2, FlxG.height * 2, FlxColor.fromRGB(19, 0, 0));
+			fade.scrollFactor.set();
+			fade.alpha = 0;
+
+			var textFadeOut:FlxText = new FlxText(300,FlxG.height * 0.5,0,"TO BE CONTINUED");
+			textFadeOut.setFormat("Impact", 128, FlxColor.RED);
+
+			textFadeOut.alpha = 0;
+
+			add(animation);
+
+			add(black);
+
+			add(textFadeOut);
+
+			add(fade);
+
+			var startFading:Bool = false;
+			var varNumbaTwo:Bool = false;
+			var fadeDone:Bool = false;
+
+			sounders.fadeIn(30);
+
+			new FlxTimer().start(0.01, function(tmr:FlxTimer)
+				{
+					if (fade.alpha != 1 && !varNumbaTwo)
+					{
+						camHUD.alpha -= 0.1;
+						fade.alpha += 0.1;
+						if (fade.alpha == 1)
+						{
+							// THIS IS WHERE WE LOAD SHIT UN-NOTICED
+							varNumbaTwo = true;
+
+							animation.alpha = 1;
+							
+							dad.alpha = 0;
+						}
+						tmr.reset(0.1);
+					}
+					else
+					{
+						fade.alpha -= 0.1;
+						if (fade.alpha <= 0.5)
+							fadeDone = true;
+						tmr.reset(0.1);
+					}
+				});
+
+			var roarPlayed:Bool = false;
+
+			new FlxTimer().start(0.01, function(tmr:FlxTimer)
+			{
+				if (!fadeDone)
+					tmr.reset(0.1)
+				else
+				{
+					if (animation.animation == null || animation.animation.name == null)
+					{
+						trace('playin cut cuz its funny lol!!!');
+						animation.animation.play("cut1");
+						resetSpookyText = false;
+						createSpookyText(cutsceneText[1], 260, FlxG.height * 0.9);
+					}
+
+					if (!animation.animation.finished)
+					{
+						tmr.reset(0.1);
+						trace(animation.animation.name + ' - FI ' + animation.animation.frameIndex);
+
+						switch(animation.animation.frameIndex)
+						{
+							case 104:
+								if (animation.animation.name == 'cut1')
+									resetSpookyTextManual();
+						}
+
+						if (animation.animation.name == 'pillar')
+						{
+							if (animation.animation.frameIndex >= 85) // why is this not in the switch case above? idk cry about it
+								startFading = true;
+							FlxG.camera.shake(0.05);
+						}
+					}
+					else
+					{
+						trace('completed ' + animation.animation.name);
+						resetSpookyTextManual();
+						switch(animation.animation.name)
+						{
+							case 'cut1':
+								animation.animation.play('cut2');
+							case 'cut2':
+								animation.animation.play('cut3');
+								energy.play();
+							case 'cut3':
+								animation.animation.play('cut4');
+								resetSpookyText = false;
+								createSpookyText(cutsceneText[2], 260, FlxG.height * 0.9);
+								animation.x -= 100;
+							case 'cut4':
+								resetSpookyTextManual();
+								sounders.fadeOut();
+								pillar.fadeIn(4);
+								animation.animation.play('pillar');
+								animation.y -= 670;
+								animation.x -= 100;
+						}
+						tmr.reset(0.1);
+					}
+
+					if (startFading)
+					{
+						sounders.fadeOut();
+						trace('do the fade out and the text');
+						if (black.alpha != 1)
+						{
+							tmr.reset(0.1);
+							black.alpha += 0.02;
+
+							if (black.alpha >= 0.7 && !roarPlayed)
+							{
+								roar.play();
+								roarPlayed = true;
+							}
+						}
+						else if (done)
+						{
+							endSong();
+							FlxG.camera.stopFX();
+						}
+						else
+						{
+							done = true;
+							tmr.reset(5);
+						}
+					}
+				}
+			});
 	}
 	
 	override function createPost()
@@ -184,4 +365,66 @@ class Nevada extends BaseStage
 	{
 		// Code here
 	}
+	function doStopSign(sign:Int = 0, fuck:Bool = false)
+	{
+		trace('sign ' + sign);
+		var daSign:FlxSprite = new FlxSprite(0,0);
+		// CachedFrames.cachedInstance.get('sign')
+
+		daSign.frames = CachedFrames.cachedInstance.fromSparrow('sign','fourth/mech/Sign_Post_Mechanic');
+
+		daSign.setGraphicSize(Std.int(daSign.width * 0.67));
+
+		daSign.cameras = [camHUD];
+
+		switch(sign)
+		{
+			case 0:
+				daSign.animation.addByPrefix('sign','Signature Stop Sign 1',24, false);
+				daSign.x = FlxG.width - 650;
+				daSign.angle = -90;
+				daSign.y = -300;
+			case 1:
+				/*daSign.animation.addByPrefix('sign','Signature Stop Sign 2',20, false);
+				daSign.x = FlxG.width - 670;
+				daSign.angle = -90;*/ // this one just doesn't work???
+			case 2:
+				daSign.animation.addByPrefix('sign','Signature Stop Sign 3',24, false);
+				daSign.x = FlxG.width - 780;
+				daSign.angle = -90;
+				if (FlxG.save.data.downscroll)
+					daSign.y = -395;
+				else
+					daSign.y = -980;
+			case 3:
+				daSign.animation.addByPrefix('sign','Signature Stop Sign 4',24, false);
+				daSign.x = FlxG.width - 1070;
+				daSign.angle = -90;
+				daSign.y = -145;
+		}
+		add(daSign);
+		daSign.flipX = fuck;
+		daSign.animation.play('sign');
+		daSign.animation.finishCallback = function(pog:String)
+			{
+				trace('ended sign');
+				remove(daSign);
+			}
+	}
+
+	var totalDamageTaken:Float = 0;
+
+	var shouldBeDead:Bool = false;
+
+	var interupt = false;
+
+	// basic explanation of this is:
+	// get the health to go to
+	// tween the gremlin to the icon
+	// play the grab animation and do some funny maths,
+	// to figure out where to tween to.
+	// lerp the health with the tween progress
+	// if you loose any health, cancel the tween.
+	// and fall off.
+	// Once it finishes, fall off.
 }
