@@ -6,7 +6,7 @@ class Nevada extends BaseStage
 {
 	var tstatic:FlxSprite = new FlxSprite(0,0).loadGraphic(Paths.image('TrickyStatic','clown'), true, 320, 180);
 
-	var tStaticSound:FlxSound = new FlxSound().loadEmbedded(Paths.sound("staticSound","preload"));
+	var tStaticSound:FlxSound = new FlxSound().loadEmbedded(Paths.sound("staticSound"));
 
 	var camFollow:FlxObject;
 
